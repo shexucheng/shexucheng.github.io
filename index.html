@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Tab选项卡</title>
+		<style type="text/css">
+			* {
+				margin: 0;
+				padding: 0;
+				color: #fff;
+			}
+
+			.nav {
+				width: 100%;
+				height: 65px;
+				background: #FFFFFF;
+				border-bottom: 1px solid #ccc;
+				list-style: none;
+				display: flex;
+				position: relative;
+				z-index: 1;
+				justify-content: center;
+				box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, .5);
+			}
+
+			.line {
+				position: absolute;
+				width: 40px;
+				height: 4px;
+				bottom: 10px;
+				background: #2E8B57;
+			}
+
+			.nav li {
+				font-size: 1.6rem;
+				margin: 0 35px;
+				cursor:pointer;
+				transition: all 0.5s;
+				color: #000;
+			}
+
+			.nav li.active {
+				color: #2E8B57;
+			}
+
+			.box {
+				width: 100%;
+				height: calc(100vh - 50px);
+				background: slateblue;
+				overflow: hidden;
+			}
+
+			.box .max {
+				width: calc(100% * 3);
+				height: 100%;
+				overflow: hidden;
+				display: flex;
+			}
+
+			.max div {
+				width: calc(100% / 3);
+				height: 100%;
+				margin-left: 0;
+				position: relative;
+			}
+
+			.max div h1 {
+				position: absolute;
+				left: 50%;
+				top: 30%;
+				letter-spacing: 10px;
+			}
+
+			.max div:nth-child(1) {
+				background: #6495ED;
+			}
+
+			.max div:nth-child(2) {
+				background: darkcyan;
+			}
+
+			.max div:nth-child(3) {
+				background: hotpink;
+			}
+		</style>
+	</head>
+	<body>
+		<ul class="nav">
+			<li class="active">首页</li>
+			<li>商场</li>
+			<li>我的</li>
+			<div class="line"></div>
+		</ul>
+		<div class="box">
+			<div class="max">
+				<div>
+					<h1>首页</h1>
+				</div>
+				<div>
+					<h1>商城</h1>
+				</div>
+				<div>
+					<h1>我的</h1>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			let box = document.querySelector('.box'),
+				max = document.querySelector('.max'),
+				lne = document.querySelector('.line'),
+				nav = document.querySelector('.nav');
+			    target = max.offsetLeft,
+				offwid = box.offsetWidth,
+				pla = true,
+				playMove = false;
+			    index = 0,
+				startX = 0,
+				time = null,
+				moveX = 0;
+
+			let skew = 0;
+
+
+			lne.style.left = nav.children[0].offsetLeft + 10 + 'px';
+			box.addEventListener('touchstart', function(e) {
+				//获取初识坐标
+				startX = e.targetTouches[0].pageX;
+
+				//和初识位置
+				target = max.offsetLeft;
+				skew = lne.offsetLeft;
+				playMove = false;
+				
+				//初识时间
+				time = Date.now();
+			});
+
+			box.addEventListener('touchmove', function(e) {
+
+				if (pla) {
+					//获取距离差
+					moveX = e.targetTouches[0].pageX - startX;
+
+					//第一页不可以向右滑动 用偏移量和  向右大于0来做判断
+					if (Math.abs(target) <= 0 && moveX >= 0) {
+						return;
+						//第三页不可以向左滑动                 向左小于0
+					} else if (Math.abs(target) >= 1960 && moveX <= 0) {
+						return;
+					} else {
+
+						let value = (moveX / offwid) * 135;
+						lne.style.transition = 'none';
+						lne.style.left = skew + -value + 'px';
+						max.style.transition = 'none';
+						max.style.marginLeft = moveX + target + 'px';
+					}
+
+					//阻止浏览器滚动
+					e.preventDefault();
+
+					//要确认用户滚动才进行下面end事件
+					playMove = true;
+					
+				}
+			});
+
+			box.addEventListener('touchend', function(e) {
+               
+				if (playMove) {
+					let timeEnd =  Date.now() - time ; 
+					
+					//避免用户滑动过快
+					pla = false;
+					
+					//滑动成功判断 大于屏幕的2/1 和滑动时间大于80毫秒
+					if (Math.abs(moveX) > offwid/2 || timeEnd > 80) {
+
+						if (moveX > 0) { //上一张	
+							index--;
+							active(index);
+							
+							lne.style.transition = 'all 0.3s';
+							lne.style.left = skew + -135 + 'px';
+							
+							max.style.transition = 'all 0.3s';
+							max.style.marginLeft = offwid * -index + 'px';
+						} else { //下一张
+							index++;
+							active(index);
+							//改变下面下滑线
+							lne.style.transition = 'all 0.3s';
+							lne.style.left = skew + 135 + 'px';
+							
+							max.style.transition = 'all 0.3s';
+							max.style.marginLeft = offwid * -index + 'px';
+						}
+					} else {
+						//滑动不成功回弹
+						index = index;
+						active(index);
+						
+						lne.style.transition = 'all 0.3s';
+						lne.style.left = skew + 'px';
+						max.style.transition = 'all 0.3s';
+						max.style.marginLeft = offwid * -index + 'px';
+					}
+					setTimeout(() => pla = true, 400);
+				}
+			})
+			let navLi = document.querySelector('.nav').children;
+
+            
+			//点击切换
+			for (let i = 0; i < navLi.length; i++) {
+				let target = max.offsetLeft;
+				let start = lne.offsetLeft;
+				navLi[i].addEventListener('click',function(){
+					active(i);
+					lne.style.transition = 'all 0.3s';
+					max.style.transition = 'all 0.3s';
+					max.style.marginLeft = -i*offwid+target+'px';
+					lne.style.left = i*135+start+'px';	
+				})
+			}
+			
+			//字体颜色函数
+			function active(mus) {
+				for (var i = 0; i < navLi.length; i++) {
+					navLi[i].classList.remove('active');
+				}
+				navLi[mus].classList.add('active');
+			}
+			
+		</script>
+	</body>
+</html>
